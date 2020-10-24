@@ -1,0 +1,7 @@
+Usage:
+
+calendar add name start end
+calendar -d name
+calendar -a -f filename
+calendar -a --weekly / --monthly
+calendar -a name -t tomorrow / today
