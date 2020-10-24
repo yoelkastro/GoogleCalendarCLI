@@ -12,6 +12,24 @@ SCOPES = ['https://www.googleapis.com/auth/calendar']
 def printRequiredOptionText(text):
 	print("No {} given, needs {} to operate.".format(text, text))
 
+def createDate(day, month, year, hour, minute=0, second=0):
+
+	date = datetime.datetime.now()
+	
+	if(not day is None):
+		date = date.replace(day=day)
+	if(not month is None):
+		date = date.replace(month=month)
+	if(not year is None):
+		date = date.replace(year=year)
+	if(not hour is None):
+		date = date.replace(hour=hour)
+
+	date = date.replace(minute=minute)
+	date = date.replace(second=second)
+
+	return date
+
 
 @click.group()
 @click.option("--credentialdir", "-cd")
@@ -43,53 +61,97 @@ def init(credentialdir):
 @main.command()
 @click.option("--name", "-n")
 
-@click.option("--start_hour", "-s")
-@click.option("--end_hour", "-e")
-@click.option("--start_minute", "-sm")
-@click.option("--end_minute", "-em")
+@click.option("--start_hour", "-s", type=int)
+@click.option("--end_hour", "-e", type=int)
+@click.option("--start_minute", "-sm", type=int)
+@click.option("--end_minute", "-em", type=int)
 
-@click.option("--date", "-dt")
-@click.option("--month", "-m")
+@click.option("--date", "-dt", type=int)
+@click.option("--month", "-m", type=int)
 @click.option("--day", "-d")
+
+@click.option("--weekly", "-wly", type=int)
+@click.option("--daily", "-dly", type=int)
 
 @click.option("--filename", "-f")
 @click.pass_context
-def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, day, filename):
-	if(filename is None):
-		if(name is None):
-			name = "Untitled"
+def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, day, weekly, daily, filename):
 
-		if(start_hour is None):
-			start_hour = 0
-		else:
-			start_hour = int(start_hour)
+	date_day = None
+	try: 
+		if(filename is None):
+			if(name is None):
+				name = "Untitled"
 
-		if(end_hour is None):
-			end_hour = 24
-		else:
-			end_hour = int(end_hour)
+			if(start_hour is None):
+				start_hour = 0
 
-		if(start_minute is None):
-			start_minute = 0
-		else:
-			start_minute = int(start_minute)
+			if(end_hour is None):
+				end_hour = 23
 
-		if(end_minute is None):
-			end_minute = 24
-		else:
-			end_minute = int(end_minute)
+			if(start_minute is None):
+				start_minute = 0
+
+			if(end_minute is None):
+				end_minute = 0
+
+	except ValueError:
+		print("Integer value expected for date values, aborting.")
+		ctx.exit(0)
 
 	if(date is None and day is None):
 		day = "today"
-	else:
+	elif(not day is None):
 		day = day.lower()
 
 	if(not day is None and (not date is None or not month is None)):
 		print("\'day\' option can't be used with the \'date\' or \'month\' options")
 		ctx.exit(0)
 
-	
-	
+	if(not weekly is None and not daily is None):
+		print("\'daily\' option can't be used with the \'weekly\' options")
+		ctx.exit(0)
+
+	if(not day is None):
+		if(day == "today"):
+			date_day = datetime.datetime.today().day
+		elif(day == "tomorrow"):
+			date_day = (datetime.datetime.today() + datetime.timedelta(days=1)).day
+	else:
+		date_day = date
+
+	rec = []
+	if(not weekly is None):
+		rec = ['RRULE:FREQ=WEEKLY;COUNT={}'.format(weekly)]
+	if(not daily is None):
+		rec = ['RRULE:FREQ=DAILY;COUNT={}'.format(daily)]
+
+	# TODO : File Support
+
+	event = {
+	  'summary': name,
+	  'location': '',
+	  'description': '',
+	  'start': {
+	    'dateTime': createDate(date_day, month, None, start_hour, start_minute).isoformat(),
+	    'timeZone': 'Europe/London',
+	  },
+	  'end': {
+	    'dateTime': createDate(date_day, month, None, end_hour, end_minute).isoformat(),
+	    'timeZone': 'Europe/London',
+	  },
+	  'recurrence': rec,
+	  'attendees': [
+	  ],
+	  'reminders': {
+	    'useDefault': True,
+	    'overrides': [],
+	  },
+	}
+
+	ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
+
+# TODO : Delete
 
 if __name__=="__main__":
 	main()
