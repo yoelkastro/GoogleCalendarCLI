@@ -1,7 +1,5 @@
-Usage:
+To Do:
 
-calendar add name start end
-calendar -d name
-calendar -a -f filename
-calendar -a --weekly / --monthly
-calendar -a name -t tomorrow / today
+Delete command
+Install script
+Uninstall command
