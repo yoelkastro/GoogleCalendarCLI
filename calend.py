@@ -42,9 +42,8 @@ def createDate(day, month, year, hour, minute, second=0, startDate=None):
 
 
 @click.group()
-@click.option("--credentialdir", "-cd")
 @click.pass_context
-def main(ctx, credentialdir):
+def main(ctx):
 	creds = None
 	ctx.obj = {}
 
@@ -58,8 +57,8 @@ def main(ctx, credentialdir):
 		ctx.exit(0)
 
 
-@main.command()
-@click.argument("credentialdir")
+@main.command(help="Initialize the command line tool with appropriate credentials")
+@click.argument("credentialdir") #help="The credential file obtained from the Google Calendar API")
 def init(credentialdir):
 	flow = InstalledAppFlow.from_client_secrets_file(
 		credentialdir, SCOPES)
@@ -68,58 +67,31 @@ def init(credentialdir):
 	with open('calendarTool/token.pickle', 'wb') as token:
 		pickle.dump(creds, token)
 
-@main.command()
-@click.option("--name", "-n")
+@main.command(help="Add a new calendar event")
+@click.option("--name", "-n", default="Untitled", help="The name of the calendar event")
 
-@click.option("--start_hour", "-s", type=int)
-@click.option("--end_hour", "-e", type=int)
-@click.option("--start_minute", "-sm", type=int)
-@click.option("--end_minute", "-em", type=int)
+@click.option("--start_hour", "-s", default=0, type=int, help="The starting hour of the calendar event")
+@click.option("--end_hour", "-e", default=23, type=int, help="The ending hour of the calendar event")
+@click.option("--start_minute", "-sm", default=0, type=int, help="The starting minute of the calendar event")
+@click.option("--end_minute", "-em", default=0, type=int, help="The ending minute of the calendar event")
 
-@click.option("--date", "-dt", type=int)
-@click.option("--month", "-m", type=int)
-@click.option("--day", "-d")
+@click.option("--date", "-dt", type=int, help="The date of the calendar event")
+@click.option("--month", "-m", type=int, help="The value of the calendar event, represented as an integer")
+@click.option("--day", "-d", default="today", help="The relative day of the calendar event. Can be TODAY or TOMORROW")
 
-@click.option("--fortnightly", "-fnly", type=int)
-@click.option("--repeat", "-r", nargs=2, type=int)
+@click.option("--fortnightly", "-fnly", type=int, help="Repeats the event every two weeks the given number of times, takes an integer value")
+@click.option("--repeat", "-r", nargs=2, type=int, help="Repeats the event on the given frequency in days the given number of times")
 
-@click.option("--weekly", "-wly", type=int)
-@click.option("--daily", "-dly", type=int)
+@click.option("--weekly", "-wly", type=int, help="Creates a weekly recurring event repeating the given number of times")
+@click.option("--daily", "-dly", type=int, help="Creates a daily recurring event repeating the given number of times")
 
-@click.option("--filename", "-f")
+@click.option("--filename", "-f", help="Creates events based on each line of the given file. Each line must be in the format \"EVENTNAME XXXX YYYY\", where X and Y are the start and end times in military time")
 @click.pass_context
 def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, day, fortnightly, repeat, weekly, daily, filename):
 
 	date_day = None
-	try: 
-		if(filename is None):
-			if(name is None):
-				name = "Untitled"
 
-			if(start_hour is None):
-				start_hour = 0
-
-			if(end_hour is None):
-				end_hour = 23
-
-			if(start_minute is None):
-				start_minute = 0
-
-			if(end_minute is None):
-				end_minute = 0
-
-	except ValueError:
-		print("Integer value expected for date values, aborting.")
-		ctx.exit(0)
-
-	if(date is None and day is None):
-		day = "today"
-	elif(not day is None):
-		day = day.lower()
-
-	if(not day is None and (not date is None or not month is None)):
-		print("\'day\' option can't be used with the \'date\' or \'month\' options")
-		ctx.exit(0)
+	day = day.lower()
 
 	if(not weekly is None and not daily is None):
 		print("\'daily\' option can't be used with the \'weekly\' options")
@@ -133,7 +105,7 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 		print("\'fortnightly\' option can't be used with the \'repeat\' options")
 		ctx.exit(0)
 
-	if(not day is None):
+	if(date is None):
 		if(day == "today"):
 			date_day = datetime.datetime.today().day
 		elif(day == "tomorrow"):
@@ -217,7 +189,7 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 
 		fnIter = fnIter + 1
 
-@main.command()
+@main.command(help="Uninstall the command line tool")
 def uninstall():
 	subprocess.run(["/usr/local/bin/calendarTool/uninstall.sh"])
 
