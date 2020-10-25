@@ -127,7 +127,7 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 		print("\'fortnightly\' option can't be used with the \'weekly\' options")
 		ctx.exit(0)
 
-	if(not fortnightly is None and not repeat is None):
+	if(not fortnightly is None and not repeat == ()):
 		print("\'fortnightly\' option can't be used with the \'repeat\' options")
 		ctx.exit(0)
 
@@ -195,6 +195,7 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 		else:
 		# If the events are being generated from a file, iterate over each line
 			with open(filename) as file:
+				# TO DO: Fix issue with multiple word event names
 				for f in file.read().splitlines():
 					line = f.split(" ")
 
