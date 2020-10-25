@@ -6,6 +6,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import click
+import os
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
@@ -55,6 +56,7 @@ def init(credentialdir):
 		credentialdir, SCOPES)
 	creds = flow.run_local_server(port=0)
 
+	os.mkdir("calendarTool")
 	with open('calendarTool/token.pickle', 'wb') as token:
 		pickle.dump(creds, token)
 
