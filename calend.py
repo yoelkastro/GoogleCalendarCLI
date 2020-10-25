@@ -81,12 +81,14 @@ def init(credentialdir):
 @click.option("--day", "-d")
 
 @click.option("--fortnightly", "-fnly", type=int)
+@click.option("--repeat", "-r", nargs=2, type=int)
+
 @click.option("--weekly", "-wly", type=int)
 @click.option("--daily", "-dly", type=int)
 
 @click.option("--filename", "-f")
 @click.pass_context
-def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, day, fortnightly, weekly, daily, filename):
+def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, day, fortnightly, repeat, weekly, daily, filename):
 
 	date_day = None
 	try: 
@@ -127,6 +129,10 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 		print("\'fortnightly\' option can't be used with the \'weekly\' options")
 		ctx.exit(0)
 
+	if(not fortnightly is None and not repeat is None):
+		print("\'fortnightly\' option can't be used with the \'repeat\' options")
+		ctx.exit(0)
+
 	if(not day is None):
 		if(day == "today"):
 			date_day = datetime.datetime.today().day
@@ -140,12 +146,21 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 			rec = ['RRULE:FREQ=WEEKLY;COUNT={}'.format(weekly)]
 	if(not daily is None):
 		rec = ['RRULE:FREQ=DAILY;COUNT={}'.format(daily)]
-	if(fortnightly is None):
-		fortnightly = 1
+
+	maxIter = 1
+	freq = 0
+
+	if(not fortnightly is None):
+		maxIter = fortnightly
+		freq = 14
+
+	if(not repeat is None):
+		maxIter = repeat[1]
+		freq = repeat[0]
 
 	fnIter = 0
 
-	while(fnIter < fortnightly):
+	while(fnIter < maxIter):
 		if(filename is None):
 
 			event = {
@@ -153,11 +168,11 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 			  'location': '',
 			  'description': '',
 			  'start': {
-			    'dateTime': (createDate(date_day, month, None, start_hour, start_minute) + datetime.timedelta(days=14 * fnIter)).isoformat(),
+			    'dateTime': (createDate(date_day, month, None, start_hour, start_minute) + datetime.timedelta(days=freq * fnIter)).isoformat(),
 			    'timeZone': 'Europe/London',
 			  },
 			  'end': {
-			    'dateTime': (createDate(date_day, month, None, end_hour, end_minute) + datetime.timedelta(days=14 * fnIter)).isoformat(),
+			    'dateTime': (createDate(date_day, month, None, end_hour, end_minute) + datetime.timedelta(days=freq * fnIter)).isoformat(),
 			    'timeZone': 'Europe/London',
 			  },
 			  'recurrence': rec,
@@ -176,7 +191,7 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 				for f in file.read().splitlines():
 					line = f.split(" ")
 
-					start = createDate(date_day, month, None, int(line[1][0:2]), int(line[1][2:4])) + datetime.timedelta(days=14 * fnIter)
+					start = createDate(date_day, month, None, int(line[1][0:2]), int(line[1][2:4])) + datetime.timedelta(days=freq * fnIter)
 					event = {
 					  'summary': line[0],
 					  'location': '',
@@ -186,7 +201,7 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 					    'timeZone': 'Europe/London',
 					  },
 					  'end': {
-					    'dateTime': (createDate(date_day, month, None, int(line[2][0:2]), int(line[2][2:4]), startDate=start) + datetime.timedelta(days=14 * fnIter)).isoformat(),
+					    'dateTime': (createDate(date_day, month, None, int(line[2][0:2]), int(line[2][2:4]), startDate=start) + datetime.timedelta(days=freq * fnIter)).isoformat(),
 					    'timeZone': 'Europe/London',
 					  },
 					  'recurrence': rec,
