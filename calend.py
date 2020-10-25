@@ -158,7 +158,7 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 		freq = 14
 
 	# If repeating, set the values to the ones given
-	if(not repeat is None):
+	if(not repeat == ()):
 		maxIter = repeat[1]
 		freq = repeat[0]
 
