@@ -13,7 +13,7 @@ SCOPES = ['https://www.googleapis.com/auth/calendar']
 def printRequiredOptionText(text):
 	print("No {} given, needs {} to operate.".format(text, text))
 
-def createDate(day, month, year, hour, minute=0, second=0):
+def createDate(day, month, year, hour, minute, second=0, startDate=None):
 
 	date = datetime.datetime.now()
 	
@@ -28,6 +28,12 @@ def createDate(day, month, year, hour, minute=0, second=0):
 
 	date = date.replace(minute=minute)
 	date = date.replace(second=second)
+
+	if(date < datetime.datetime.now() and date.day != datetime.datetime.now().day and year is None):
+		date = date.replace(year=date.year+1)
+
+	if(not startDate is None and date < startDate and date + datetime.timedelta(days=1) > startDate):
+		date = date + datetime.timedelta(days=1)
 
 	return date
 
@@ -123,35 +129,64 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 		date_day = date
 
 	rec = []
-	if(not weekly is None):
-		rec = ['RRULE:FREQ=WEEKLY;COUNT={}'.format(weekly)]
-	if(not daily is None):
-		rec = ['RRULE:FREQ=DAILY;COUNT={}'.format(daily)]
 
-	# TODO : File Support
+	if(filename is None):
+		if(not weekly is None):
+			rec = ['RRULE:FREQ=WEEKLY;COUNT={}'.format(weekly)]
+		if(not daily is None):
+			rec = ['RRULE:FREQ=DAILY;COUNT={}'.format(daily)]
 
-	event = {
-	  'summary': name,
-	  'location': '',
-	  'description': '',
-	  'start': {
-	    'dateTime': createDate(date_day, month, None, start_hour, start_minute).isoformat(),
-	    'timeZone': 'Europe/London',
-	  },
-	  'end': {
-	    'dateTime': createDate(date_day, month, None, end_hour, end_minute).isoformat(),
-	    'timeZone': 'Europe/London',
-	  },
-	  'recurrence': rec,
-	  'attendees': [
-	  ],
-	  'reminders': {
-	    'useDefault': True,
-	    'overrides': [],
-	  },
-	}
+		event = {
+		  'summary': name,
+		  'location': '',
+		  'description': '',
+		  'start': {
+		    'dateTime': createDate(date_day, month, None, start_hour, start_minute).isoformat(),
+		    'timeZone': 'Europe/London',
+		  },
+		  'end': {
+		    'dateTime': createDate(date_day, month, None, end_hour, end_minute).isoformat(),
+		    'timeZone': 'Europe/London',
+		  },
+		  'recurrence': rec,
+		  'attendees': [
+		  ],
+		  'reminders': {
+		    'useDefault': True,
+		    'overrides': [],
+		  },
+		}
 
-	ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
+		ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
+
+	else:
+		with open(filename) as file:
+			for f in file.read().splitlines():
+				line = f.split(" ")
+
+				start = createDate(date_day, month, None, int(line[1][0:2]), int(line[1][2:4]))
+				event = {
+				  'summary': line[0],
+				  'location': '',
+				  'description': '',
+				  'start': {
+				    'dateTime': start.isoformat(),
+				    'timeZone': 'Europe/London',
+				  },
+				  'end': {
+				    'dateTime': createDate(date_day, month, None, int(line[2][0:2]), int(line[2][2:4]), startDate=start).isoformat(),
+				    'timeZone': 'Europe/London',
+				  },
+				  'recurrence': rec,
+				  'attendees': [
+				  ],
+				  'reminders': {
+				    'useDefault': False,
+				    'overrides': [],
+				  },
+				}
+
+				ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
 
 # TODO : Delete
 
