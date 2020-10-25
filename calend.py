@@ -55,7 +55,7 @@ def init(credentialdir):
 		credentialdir, SCOPES)
 	creds = flow.run_local_server(port=0)
 
-	with open('token.pickle', 'wb') as token:
+	with open('calendarTool/token.pickle', 'wb') as token:
 		pickle.dump(creds, token)
 
 @main.command()
