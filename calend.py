@@ -15,19 +15,16 @@ import subprocess
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 
-'''
+# Create a new datetime object with the given parameters. Any parameter can be left as None to default to the value in datetime.datetime.now().
 
-Create a new datetime object with the given parameters. Any parameter can be left as None to default to the value in datetime.datetime.now().
+# day: The day of the date
+# month: The month of the date
+# year: The year of the date. Will increment by one if the provided date is earlier than today.
+# hour: The hour of the date
+# minute: The minute of the date
+# second: The second of the date. 0 by default
+# startDate: Only used if the return value will be the end date of an event. Used to make sure the ending time isn't before the starting time.
 
-day: The day of the date
-month: The month of the date
-year: The year of the date. Will increment by one if the provided date is earlier than today.
-hour: The hour of the date
-minute: The minute of the date
-second: The second of the date. 0 by default
-startDate: Only used if the return value will be the end date of an event. Used to make sure the ending time isn't before the starting time.
-
-'''
 def createDate(day, month, year, hour, minute, second=0, startDate=None):
 
 	# Get the current datetime
@@ -59,11 +56,10 @@ def createDate(day, month, year, hour, minute, second=0, startDate=None):
 
 @click.group()
 @click.pass_context
-'''
 
-Main command. Authenticates API credentials before calling other commands.
 
-'''
+# Main command. Authenticates API credentials before calling other commands.
+
 def main(ctx):
 	creds = None
 	ctx.obj = {}
@@ -76,15 +72,13 @@ def main(ctx):
 	elif((not ctx.invoked_subcommand == "init") and (not ctx.invoked_subcommand == "uninstall")):
 		print("Credentials not initialised, please run init.")
 		ctx.exit(0)
-
+# End main
 
 @main.command(help="Initialize the command line tool with appropriate credentials")
 @click.argument("credentialdir")
-'''
 
-Initialization command, has to be called after installation. Requires API credentials for setup.
+# Initialization command, has to be called after installation. Requires API credentials for setup.
 
-'''
 def init(credentialdir):
 	flow = InstalledAppFlow.from_client_secrets_file(
 		credentialdir, SCOPES)
@@ -92,6 +86,7 @@ def init(credentialdir):
 
 	with open('calendarTool/token.pickle', 'wb') as token:
 		pickle.dump(creds, token)
+# End init
 
 @main.command(help="Add a new calendar event")
 @click.option("--name", "-n", default="Untitled", help="The name of the calendar event")
@@ -113,11 +108,9 @@ def init(credentialdir):
 
 @click.option("--filename", "-f", help="Creates events based on each line of the given file. Each line must be in the format \"EVENTNAME XXXX YYYY\", where X and Y are the start and end times in military time")
 @click.pass_context
-'''
 
-Adds a new calendar event.
+# Adds a new calendar event.
 
-'''
 def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, day, fortnightly, repeat, weekly, daily, filename):
 
 	# The day for the starting time of the generated event
