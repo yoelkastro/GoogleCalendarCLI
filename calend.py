@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from __future__ import print_function
 import datetime
 import pickle
@@ -7,6 +9,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import click
 import os
+import subprocess
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
@@ -50,7 +53,7 @@ def main(ctx, credentialdir):
 			creds = pickle.load(token)
 		ctx.obj["service"] = build('calendar', 'v3', credentials=creds)
 
-	elif(not ctx.invoked_subcommand == "init"):
+	elif((not ctx.invoked_subcommand == "init") and (not ctx.invoked_subcommand == "uninstall")):
 		print("Credentials not initialised, please run init.")
 		ctx.exit(0)
 
@@ -62,7 +65,6 @@ def init(credentialdir):
 		credentialdir, SCOPES)
 	creds = flow.run_local_server(port=0)
 
-	os.mkdir("calendarTool")
 	with open('calendarTool/token.pickle', 'wb') as token:
 		pickle.dump(creds, token)
 
@@ -187,6 +189,10 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 				}
 
 				ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
+
+@main.command()
+def uninstall():
+	subprocess.run(["/usr/local/bin/calendarTool/uninstall.sh"])
 
 # TODO : Delete
 
