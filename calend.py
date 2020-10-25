@@ -80,12 +80,13 @@ def init(credentialdir):
 @click.option("--month", "-m", type=int)
 @click.option("--day", "-d")
 
+@click.option("--fortnightly", "-fnly", type=int)
 @click.option("--weekly", "-wly", type=int)
 @click.option("--daily", "-dly", type=int)
 
 @click.option("--filename", "-f")
 @click.pass_context
-def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, day, weekly, daily, filename):
+def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, day, fortnightly, weekly, daily, filename):
 
 	date_day = None
 	try: 
@@ -122,6 +123,10 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 		print("\'daily\' option can't be used with the \'weekly\' options")
 		ctx.exit(0)
 
+	if(not fortnightly is None and not weekly is None):
+		print("\'fortnightly\' option can't be used with the \'weekly\' options")
+		ctx.exit(0)
+
 	if(not day is None):
 		if(day == "today"):
 			date_day = datetime.datetime.today().day
@@ -131,64 +136,71 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 		date_day = date
 
 	rec = []
-
-	if(filename is None):
-		if(not weekly is None):
+	if(not weekly is None):
 			rec = ['RRULE:FREQ=WEEKLY;COUNT={}'.format(weekly)]
-		if(not daily is None):
-			rec = ['RRULE:FREQ=DAILY;COUNT={}'.format(daily)]
+	if(not daily is None):
+		rec = ['RRULE:FREQ=DAILY;COUNT={}'.format(daily)]
+	if(fortnightly is None):
+		fortnightly = 1
 
-		event = {
-		  'summary': name,
-		  'location': '',
-		  'description': '',
-		  'start': {
-		    'dateTime': createDate(date_day, month, None, start_hour, start_minute).isoformat(),
-		    'timeZone': 'Europe/London',
-		  },
-		  'end': {
-		    'dateTime': createDate(date_day, month, None, end_hour, end_minute).isoformat(),
-		    'timeZone': 'Europe/London',
-		  },
-		  'recurrence': rec,
-		  'attendees': [
-		  ],
-		  'reminders': {
-		    'useDefault': True,
-		    'overrides': [],
-		  },
-		}
+	fnIter = 0
 
-		ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
+	while(fnIter < fortnightly):
+		if(filename is None):
 
-	else:
-		with open(filename) as file:
-			for f in file.read().splitlines():
-				line = f.split(" ")
+			event = {
+			  'summary': name,
+			  'location': '',
+			  'description': '',
+			  'start': {
+			    'dateTime': (createDate(date_day, month, None, start_hour, start_minute) + datetime.timedelta(days=14 * fnIter)).isoformat(),
+			    'timeZone': 'Europe/London',
+			  },
+			  'end': {
+			    'dateTime': (createDate(date_day, month, None, end_hour, end_minute) + datetime.timedelta(days=14 * fnIter)).isoformat(),
+			    'timeZone': 'Europe/London',
+			  },
+			  'recurrence': rec,
+			  'attendees': [
+			  ],
+			  'reminders': {
+			    'useDefault': False,
+			    'overrides': [],
+			  },
+			}
 
-				start = createDate(date_day, month, None, int(line[1][0:2]), int(line[1][2:4]))
-				event = {
-				  'summary': line[0],
-				  'location': '',
-				  'description': '',
-				  'start': {
-				    'dateTime': start.isoformat(),
-				    'timeZone': 'Europe/London',
-				  },
-				  'end': {
-				    'dateTime': createDate(date_day, month, None, int(line[2][0:2]), int(line[2][2:4]), startDate=start).isoformat(),
-				    'timeZone': 'Europe/London',
-				  },
-				  'recurrence': rec,
-				  'attendees': [
-				  ],
-				  'reminders': {
-				    'useDefault': False,
-				    'overrides': [],
-				  },
-				}
+			ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
 
-				ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
+		else:
+			with open(filename) as file:
+				for f in file.read().splitlines():
+					line = f.split(" ")
+
+					start = createDate(date_day, month, None, int(line[1][0:2]), int(line[1][2:4])) + datetime.timedelta(days=14 * fnIter)
+					event = {
+					  'summary': line[0],
+					  'location': '',
+					  'description': '',
+					  'start': {
+					    'dateTime': start.isoformat(),
+					    'timeZone': 'Europe/London',
+					  },
+					  'end': {
+					    'dateTime': (createDate(date_day, month, None, int(line[2][0:2]), int(line[2][2:4]), startDate=start) + datetime.timedelta(days=14 * fnIter)).isoformat(),
+					    'timeZone': 'Europe/London',
+					  },
+					  'recurrence': rec,
+					  'attendees': [
+					  ],
+					  'reminders': {
+					    'useDefault': False,
+					    'overrides': [],
+					  },
+					}
+
+					ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
+
+		fnIter = fnIter + 1
 
 @main.command()
 def uninstall():
