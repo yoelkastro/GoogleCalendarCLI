@@ -201,7 +201,7 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 
 					start = createDate(date_day, month, None, int(line[1][0:2]), int(line[1][2:4])) + datetime.timedelta(days=freq * fnIter)
 					event = {
-					  'summary': line[0],
+					  'summary': line[0].replace("_", " "),
 					  'location': '',
 					  'description': '',
 					  'start': {
@@ -225,11 +225,23 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 
 		fnIter = fnIter + 1
 
+@main.command()
+@click.option("--name", "-n", help="Delete all events with the given name.")
+@click.pass_context
+def delete(ctx, name):
+	page_token = None
+	while True:
+		events = ctx.obj["service"].events().list(calendarId='primary', pageToken=page_token).execute()
+		for event in events['items']:
+			if(event["summary"] == name):
+				ctx.obj["service"].events().delete(calendarId='primary', eventId=event["id"]).execute()
+		page_token = events.get('nextPageToken')
+		if not page_token:
+			break
+
 @main.command(help="Uninstall the command line tool")
 def uninstall():
 	subprocess.run(["/usr/local/bin/calendarTool/uninstall.sh"])
-
-# TODO : Delete
 
 if __name__=="__main__":
 	main()
