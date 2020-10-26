@@ -64,8 +64,8 @@ def main(ctx):
 	creds = None
 	ctx.obj = {}
 
-	if os.path.exists('calendarTool/token.pickle'):
-		with open('calendarTool/token.pickle', 'rb') as token:
+	if os.path.exists('/usr/local/bin/calendarTool/token.pickle'):
+		with open('/usr/local/bin/calendarTool/token.pickle', 'rb') as token:
 			creds = pickle.load(token)
 		ctx.obj["service"] = build('calendar', 'v3', credentials=creds)
 
@@ -84,7 +84,7 @@ def init(credentialdir):
 		credentialdir, SCOPES)
 	creds = flow.run_local_server(port=0)
 
-	with open('calendarTool/token.pickle', 'wb') as token:
+	with open('/usr/local/bin/calendarTool/token.pickle', 'wb') as token:
 		pickle.dump(creds, token)
 # End init
 
