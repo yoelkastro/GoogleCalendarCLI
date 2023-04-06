@@ -100,9 +100,9 @@ def init(credentialdir):
 @click.option("--month", "-m", type=int, help="The value of the calendar event, represented as an integer")
 @click.option("--day", "-d", default="today", help="The relative day of the calendar event. Can be TODAY or TOMORROW")
 
-@click.option("--fortnightly", "-fnly", type=int, help="Repeats the event every two weeks the given number of times, takes an integer value")
-@click.option("--repeat", "-r", nargs=2, type=int, help="Repeats the event on the given frequency in days the given number of times")
+@click.option("--repeat", "-r", nargs=2, type=int, help="Repeats the event on the given frequency in days the given number of times. Takes two arguments: first for the frequency, then for the number of repetitions.")
 
+@click.option("--fortnightly", "-fnly", type=int, help="Repeats the event every two weeks the given number of times, takes an integer value")
 @click.option("--weekly", "-wly", type=int, help="Creates a weekly recurring event repeating the given number of times")
 @click.option("--daily", "-dly", type=int, help="Creates a daily recurring event repeating the given number of times")
 
