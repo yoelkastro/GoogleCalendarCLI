@@ -1,5 +1,6 @@
 To Do:
 
+Fix bug with non-recurring events being treated as recurring events that recur once
 Delete command
-Install script
-Uninstall command
+Change timezone command
+Proper ReadMe + documentation
