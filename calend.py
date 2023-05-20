@@ -11,7 +11,7 @@ import click
 import os
 import subprocess
 
-# The scopes of the calendar API
+# The scopes of the calendar API
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 
@@ -80,8 +80,7 @@ def main(ctx):
 # Initialization command, has to be called after installation. Requires API credentials for setup.
 
 def init(credentialdir):
-	flow = InstalledAppFlow.from_client_secrets_file(
-		credentialdir, SCOPES)
+	flow = InstalledAppFlow.from_client_secrets_file(credentialdir, SCOPES)
 	creds = flow.run_local_server(port=0)
 
 	with open('/usr/local/bin/calendarTool/token.pickle', 'wb') as token:
@@ -193,15 +192,15 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 			ctx.obj["service"].events().insert(calendarId="primary", body=event).execute()
 
 		else:
-		# If the events are being generated from a file, iterate over each line
+		# If the events are being generated from a file, iterate over each line
 			with open(filename) as file:
 				# TO DO: Fix issue with multiple word event names
 				for f in file.read().splitlines():
 					line = f.split(" ")
 
-					start = createDate(date_day, month, None, int(line[1][0:2]), int(line[1][2:4])) + datetime.timedelta(days=freq * fnIter)
+					start = createDate(date_day, month, None, int(line[0][0:2]), int(line[0][2:4])) + datetime.timedelta(days=freq * fnIter)
 					event = {
-					  'summary': line[0].replace("_", " "),
+					  'summary': ' '.join(line[2:]),
 					  'location': '',
 					  'description': '',
 					  'start': {
@@ -209,7 +208,7 @@ def add(ctx, name, start_hour, end_hour, start_minute, end_minute, date, month, 
 					    'timeZone': 'Europe/London',
 					  },
 					  'end': {
-					    'dateTime': (createDate(date_day, month, None, int(line[2][0:2]), int(line[2][2:4]), startDate=start) + datetime.timedelta(days=freq * fnIter)).isoformat(),
+					    'dateTime': (createDate(date_day, month, None, int(line[1][0:2]), int(line[1][2:4]), startDate=start) + datetime.timedelta(days=freq * fnIter)).isoformat(),
 					    'timeZone': 'Europe/London',
 					  },
 					  'recurrence': rec,
